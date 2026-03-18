@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRI VISHNU PRIYA FINANCE - Official Master</title>
+    <style>
+        :root { --primary: #002244; --secondary: #28a745; --bg: #f4f7f9; --danger: #d32f2f; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        header { background: var(--primary); color: white; padding: 18px; text-align: center; font-size: 1.4rem; font-weight: bold; position: sticky; top:0; z-index:1000; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        .container { padding: 10px; max-width: 1200px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 5px; transition: 0.3s; }
+        .btn-green { background: var(--secondary); }
+        .btn-red { background: var(--danger); }
+        .btn-print { background: #555; margin-top: 10px; margin-bottom: 10px; }
+        .nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .nav-item { background: white; padding: 15px; border-radius: 12px; text-align: center; border: 2px solid var(--primary); color: var(--primary); font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; min-height: 85px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); font-size: 13px; }
+        .hidden { display: none; }
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; background: white; }
+        .report-table th, .report-table td { border: 1px solid #ddd; padding: 10px; text-align: left; vertical-align: top; }
+        .report-table th { background: #e9ecef; color: var(--primary); font-weight: bold; }
+        .img-preview { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 2px solid #ddd; margin: 2px; cursor: pointer; }
+        .summary-box { background: #e3f2fd; padding: 15px; border-radius: 12px; margin-bottom: 15px; font-weight: bold; text-align: center; font-size: 15px; color: #003366; border: 1px solid #b3d7ff; }
+        
+        @media print { 
+            .no-print, header, .nav-grid, button, input, select, textarea { display: none !important; } 
+            .card { box-shadow: none !important; border: none !important; padding: 0 !important; }
+            .sub-section { display: block !important; }
+            body { background: white; }
+        }
+    </style>
+</head>
+<body>
+
+<header>SRI VISHNU PRIYA FINANCE</header>
+
+<div class="container">
+    <div id="login-section" class="card no-print">
+        <h3 style="text-align: center; color: var(--primary);">Secure Access</h3>
+        <input type="text" id="l-id" placeholder="User ID">
+        <input type="password" id="l-pass" placeholder="Password">
+        <button id="login-btn">LOGIN</button>
+    </div>
+
+    <div id="admin-dashboard" class="hidden">
+        <div class="nav-grid no-print">
+            <div class="nav-item" onclick="showSub('a-branch-mgmt')">Branch Adding / List</div>
+            <div class="nav-item" onclick="showSub('a-reg')">Emp Register / Edit</div>
+            <div class="nav-item" onclick="showSub('a-assign')">Assign Accounts</div>
+            <div class="nav-item" onclick="showSub('a-visit-stat')">Assignment Visit Status</div>
+            <div class="nav-item" onclick="showSub('a-emp-rep')">Employee Detailed Search</div>
+            <div class="nav-item" onclick="showSub('a-branch')">Branch Report (Month)</div>
+            <div class="nav-item" onclick="showSub('a-month-rep')">Monthly Report (Emp)</div>
+            <div class="nav-item" onclick="showSub('a-att')">Attendance Log</div>
+        </div>
+
+        <div id="a-visit-stat" class="sub-section card hidden">
+            <h4>Employee Assignment Visit Status</h4>
+            <div class="no-print">
+                <select id="stat-br-sel" onchange="loadStatEmps()"><option value="">Select Branch</option></select>
+                <select id="stat-em-sel"><option value="">Select Employee</option></select>
+                <input type="month" id="stat-month-val">
+                <button class="btn-green" onclick="checkVisitStatus()">Search Status</button>
+            </div>
+            <div id="stat-summary-box" class="summary-box hidden" style="margin-top:10px;"></div>
+            <div style="overflow-x:auto;"><table class="report-table"><thead><tr><th>HP Number</th><th>Customer Name</th><th>Status</th><th>Visit Date</th></tr></thead><tbody id="stat-table-body"></tbody></table></div>
+            <button onclick="window.print()" class="btn-print no-print">PRINT STATUS</button>
+        </div>
+
+        <div id="a-branch-mgmt" class="sub-section card hidden">
+            <h4>Branch Management</h4>
+            <input type="text" id="new-branch-name" placeholder="Enter New Branch Name">
+            <button class="btn-green" onclick="addBranch()">Add Branch</button>
+            <ul id="branch-display-list" style="margin-top:15px;"></ul>
+        </div>
+
+        <div id="a-reg" class="sub-section card hidden">
+            <h4>Emp Registration / Edit</h4>
+            <p id="edit-mode-label" style="color:red; font-weight:bold; display:none;">Editing Mode Active (ID Locked)</p>
+            <input type="text" id="r-name" placeholder="Full Name">
+            <input type="text" id="r-init-id" placeholder="Employee ID (e.g. 501)">
+            <input type="number" id="r-aadhar" placeholder="12 Digit Aadhar Number">
+            <select id="r-branch-select"><option value="">Select Branch</option></select>
+            <input type="password" id="r-pass" placeholder="Password">
+            <button class="btn-green" onclick="saveEmployee()">Save Employee</button>
+            <button id="cancel-edit-btn" class="btn-red hidden" onclick="cancelEdit()">Cancel Edit</button>
+            <table class="report-table"><thead><tr><th>ID</th><th>Name</th><th>Branch</th><th>Action</th></tr></thead><tbody id="a-reg-list"></tbody></table>
+        </div>
+
+        <div id="a-assign" class="sub-section card hidden">
+            <h4>Assign HP Numbers</h4>
+            <select id="as-branch-sel" onchange="loadAssignEmps()"><option value="">Select Branch</option></select>
+            <select id="as-emp-sel"><option value="">Select Employee</option></select>
+            <textarea id="as-hp-list" placeholder="Numbers separated by comma"></textarea>
+            <button class="btn-green" id="as-btn">Assign Now</button>
+        </div>
+
+        <div id="a-emp-rep" class="sub-section card hidden">
+            <h4>Employee Detailed Visit Search</h4>
+            <div class="no-print">
+                <select id="a-rep-branch-sel" onchange="loadSearchEmps()"><option value="">Select Branch</option></select>
+                <select id="a-rep-emp-sel"><option value="">All Employees</option></select>
+                <input type="month" id="a-rep-month">
+                <button id="a-search-btn" class="btn-green" onclick="renderAdminEmpReport()">Search Details</button>
+            </div>
+            <button onclick="window.print()" class="btn-print no-print">PRINT REPORT</button>
+            <div style="overflow-x:auto;"><table class="report-table"><thead><tr><th>Date/Time</th><th>Customer/HP</th><th>Amt/Stat</th><th>Payment Details</th><th>Loc</th><th>Photos/Receipt</th></tr></thead><tbody id="a-emp-rep-body"></tbody></table></div>
+        </div>
+
+        <div id="a-branch" class="sub-section card hidden">
+            <h4>Branch Monthly Performance (%)</h4>
+            <div class="no-print"><select id="b-search-select"><option value="">Select Branch</option></select><input type="month" id="b-month-val"><button class="btn-green" onclick="renderBranchReport()">Get Performance Report</button></div>
+            <button onclick="window.print()" class="btn-print no-print">PRINT REPORT</button>
+            <div id="b-results" style="overflow-x:auto; margin-top:15px;"></div>
+        </div>
+
+        <div id="a-month-rep" class="sub-section card hidden">
+            <h4>Employee Monthly Detailed Report</h4>
+            <div class="no-print"><select id="m-branch-select" onchange="loadMonthlyEmps()"><option value="">Select Branch</option></select><select id="m-emp-sel"><option value="">Select Employee</option></select><input type="month" id="m-mo-input"><button class="btn-green" onclick="renderMonthlyReport()">Get Detailed Report</button></div>
+            <button onclick="window.print()" class="btn-print no-print">PRINT REPORT</button>
+            <div id="m-summary" class="summary-box hidden"></div>
+            <div style="overflow-x:auto;"><table class="report-table"><thead><tr><th>Date/Time</th><th>Customer/HP</th><th>Status</th><th>Type/Amt</th><th>Receipt Photo</th></tr></thead><tbody id="m-table-body"></tbody></table></div>
+        </div>
+
+        <div id="a-att" class="sub-section card hidden">
+            <h4>Attendance Log</h4>
+            <button onclick="window.print()" class="btn-print no-print">PRINT LOG</button>
+            <table class="report-table"><thead><tr><th>Name</th><th>ID</th><th>Branch</th><th>Work Days</th></tr></thead><tbody id="att-body"></tbody></table>
+        </div>
+
+        <button class="btn-red no-print" onclick="location.reload()">LOGOUT</button>
+    </div>
+
+    <div id="employee-dashboard" class="hidden">
+        <h4 id="e-name-tag" style="text-align: center; color: var(--primary);"></h4>
+        <div class="nav-grid no-print">
+            <div class="nav-item" onclick="showSub('e-visit')">Customer Visit</div>
+            <div class="nav-item" onclick="showSub('e-target')">Target Completed</div>
+            <div class="nav-item" onclick="showSub('e-report')">My Report</div>
+        </div>
+
+        <div id="e-visit" class="sub-section card hidden no-print">
+            <p id="gps-status" style="color:red; font-weight:bold; text-align:center;">GPS Checking...</p>
+            <input type="text" id="v-name" placeholder="Customer Name"><input type="number" id="v-hp" placeholder="HP Number"><input type="text" id="v-vill" placeholder="Village">
+            <select id="v-stat" onchange="toggleV()"><option value="Not Paid">Not Paid</option><option value="Paid">Paid</option><option value="Seized">Seized</option></select>
+            
+            <div id="v-paid-logic" class="hidden">
+                <input type="number" id="v-amt" placeholder="Amt Paid">
+                <select id="v-pay-type" onchange="toggleL()"><option value="PCR">PCR</option><option value="Lock Amount">Lock Amount</option></select>
+                <div id="v-pcr-box" class="hidden"><label>తర్వాత అమౌంట్ కడతారా?</label><select id="v-pcr-later" onchange="togglePCRDate()"><option value="No">No</option><option value="Yes">Yes</option></select><input type="date" id="v-pcr-date" class="hidden"></div>
+                <div id="v-lock-box" class="hidden"><label>PPFC Done?</label><select id="v-ppfc" onchange="toggleReceipt()"><option value="No">No</option><option value="Yes">Yes</option></select><div id="v-receipt-box" class="hidden"><label>Receipt Photo:</label><input type="file" id="img-receipt" accept="image/*" capture="environment"></div></div>
+            </div>
+            <div id="v-unpaid-logic"><input type="text" id="v-unr" placeholder="Reason"><input type="date" id="v-next"></div>
+            <div id="v-seized-logic" class="hidden"><label>Seize Time:</label><input type="time" id="v-seize-time"></div>
+            <label>Photo 1 (Live):</label><input type="file" id="img1" accept="image/*" capture="environment">
+            <label>Photo 2 (Live):</label><input type="file" id="img2" accept="image/*" capture="environment">
+            <button class="btn-green" id="v-submit-btn" onclick="submitVisit()">SUBMIT DATA</button>
+        </div>
+
+        <div id="e-target" class="sub-section card hidden">
+            <h4>My Target Summary</h4>
+            <div id="e-target-summary" class="summary-box"></div>
+            <table class="report-table"><thead><tr><th>HP Number</th><th>Customer</th><th>Status</th><th>Date</th></tr></thead><tbody id="e-target-body"></tbody></table>
+            <button onclick="window.print()" class="btn-print no-print">PRINT TARGET</button>
+        </div>
+
+        <div id="e-report" class="sub-section card hidden">
+            <h4>My Detailed History</h4>
+            <div class="no-print"><input type="date" id="e-rep-date"><button onclick="renderEmployeeSelfReport()">Search Report</button></div>
+            <button onclick="window.print()" class="btn-print no-print">PRINT REPORT</button>
+            <div style="overflow-x:auto;"><table class="report-table"><thead><tr><th>Date/Time</th><th>Customer/HP</th><th>Stat/Amt</th><th>Details/Loc</th><th>Photos/Receipt</th></tr></thead><tbody id="e-report-body"></tbody></table></div>
+        </div>
+
+        <button class="btn-red no-print" onclick="location.reload()">LOGOUT</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyA6FCJuMmZgMS5NyJer7ceDY81OSFaK8TQ",
+        authDomain: "sri-vishnu-priya-finance.firebaseapp.com",
+        projectId: "sri-vishnu-priya-finance",
+        storageBucket: "sri-vishnu-priya-finance.firebasestorage.app",
+        messagingSenderId: "811246440030",
+        appId: "1:811246440030:web:6a5bf572a8a33fcf0ceecf"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let current = null, gps = "0,0", allEmps = [], allVisits = [], allBranches = [], allAssigns = {};
+
+    onValue(ref(db, 'branches'), s => { allBranches = s.val() ? Object.values(s.val()) : []; updateDropdowns(); });
+    onValue(ref(db, 'employees'), s => { allEmps = s.val() ? Object.values(s.val()) : []; renderEmpList(); });
+    onValue(ref(db, 'visits'), s => { allVisits = s.val() ? Object.values(s.val()) : []; });
+    onValue(ref(db, 'assignments'), s => { allAssigns = s.val() || {}; });
+
+    // --- Employee Management ---
+    window.saveEmployee = () => {
+        const n=document.getElementById('r-name').value, id=document.getElementById('r-init-id').value, ad=document.getElementById('r-aadhar').value, br=document.getElementById('r-branch-select').value, ps=document.getElementById('r-pass').value;
+        if(!n||!id||!br||!ps) return alert("Fill all fields!");
+        set(ref(db,'employees/'+id),{id,name:n,aadhar:ad,branch:br,pass:ps}).then(()=>{ alert("Saved!"); cancelEdit(); });
+    };
+
+    window.editEmp = (id) => {
+        const e = allEmps.find(x => x.id === id);
+        if(e) {
+            document.getElementById('r-name').value = e.name; document.getElementById('r-init-id').value = e.id;
+            document.getElementById('r-init-id').readOnly = true; document.getElementById('r-aadhar').value = e.aadhar || "";
+            document.getElementById('r-branch-select').value = e.branch; document.getElementById('r-pass').value = e.pass;
+            document.getElementById('edit-mode-label').style.display = 'block'; document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            window.scrollTo(0,0);
+        }
+    };
+
+    window.cancelEdit = () => {
+        ['r-name', 'r-init-id', 'r-aadhar', 'r-pass'].forEach(i => document.getElementById(i).value = "");
+        document.getElementById('r-init-id').readOnly = false; document.getElementById('edit-mode-label').style.display = 'none';
+        document.getElementById('cancel-edit-btn').classList.add('hidden');
+    };
+
+    // --- Visit Submission with Telegram Notification ---
+    window.submitVisit = async () => {
+        if(!current) return alert("Login first!");
+        if(!confirm("సబ్మిట్ చేయాలా?")) return;
+        const f1 = document.getElementById('img1').files[0], f2 = document.getElementById('img2').files[0], fr = document.getElementById('img-receipt').files[0];
+        if(!f1 || !f2) return alert("Photos mandatory!");
+        const btn = document.getElementById('v-submit-btn'); btn.innerText = "Submitting..."; btn.disabled = true;
+
+        try {
+            const toB64 = f => new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(f); });
+            const vData = {
+                date: new Date().toISOString().split('T')[0], time: new Date().toLocaleTimeString(),
+                eid: current.id, ename: current.name, cname: document.getElementById('v-name').value, hp: document.getElementById('v-hp').value,
+                vill: document.getElementById('v-vill').value, stat: document.getElementById('v-stat').value, amt: document.getElementById('v-amt').value || 0,
+                type: document.getElementById('v-pay-type').value || "---", pcrDate: document.getElementById('v-pcr-date').value || "---",
+                ppfc: document.getElementById('v-ppfc').value || "No", unr: document.getElementById('v-unr').value || "---", 
+                next: document.getElementById('v-next').value || "---", seizeTime: document.getElementById('v-seize-time').value || "---", 
+                loc: gps, i1: await toB64(f1), i2: await toB64(f2), ir: fr ? await toB64(fr) : "N/A"
+            };
+
+            await push(ref(db, 'visits'), vData);
+
+            // Telegram Alert
+            const botToken = "8642256494:AAFSLiYtB6UgxQXXneLGubZs0LeeJ9t7uDQ";
+            const chatId = "7860895973";
+            const msg = `🔔 *New Visit Alert!*\n\n👤 *Emp:* ${vData.ename}\n🤝 *Cust:* ${vData.cname}\n📄 *HP:* ${vData.hp}\n📍 *Vill:* ${vData.vill}\n📊 *Stat:* ${vData.stat}\n💰 *Amt:* ₹${vData.amt}\n⏰ *Time:* ${vData.time}`;
+            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(msg)}&parse_mode=Markdown`);
+
+            alert("Success! Notification sent to Admin."); location.reload();
+        } catch(e) { alert("Error: "+e.message); btn.innerText = "SUBMIT DATA"; btn.disabled = false; }
+    };
+
+    // --- General Logic ---
+    window.handleLogin = () => {
+        const id = document.getElementById('l-id').value, ps = document.getElementById('l-pass').value;
+        if(id === "rajesh" && ps === "rajesh") {
+            current = {id:'admin', name:'Rajesh'}; document.getElementById('login-section').classList.add('hidden'); document.getElementById('admin-dashboard').classList.remove('hidden');
+        } else {
+            const e = allEmps.find(x => x.id === id && x.pass === ps);
+            if(e) {
+                current = e; document.getElementById('login-section').classList.add('hidden'); document.getElementById('employee-dashboard').classList.remove('hidden');
+                document.getElementById('e-name-tag').innerText = "Welcome, " + e.name; startGPS();
+            } else alert("Invalid ID/Password");
+        }
+    };
+
+    window.renderAdminEmpReport = () => {
+        const b = document.getElementById('a-rep-branch-sel').value, eid = document.getElementById('a-rep-emp-sel').value, mo = document.getElementById('a-rep-month').value;
+        let data = allVisits;
+        if(b) { const ids = allEmps.filter(e => e.branch === b).map(e => e.id); data = data.filter(v => ids.includes(v.eid)); }
+        if(eid) data = data.filter(v => v.eid === eid);
+        if(mo) data = data.filter(v => v.date.startsWith(mo));
+        document.getElementById('a-emp-rep-body').innerHTML = data.map(v => `<tr><td>${v.date}<br>${v.time}</td><td>${v.cname}<br><b>${v.hp}</b></td><td>₹${v.amt}<br>${v.stat}</td><td>Type: ${v.type}<br>PPFC: ${v.ppfc}</td><td><small>${v.loc}</small></td><td><img src="${v.i1}" class="img-preview" onclick="window.open(this.src)"><img src="${v.i2}" class="img-preview" onclick="window.open(this.src)">${v.ir && v.ir !== 'N/A' ? `<br><img src="${v.ir}" class="img-preview" onclick="window.open(this.src)">` : ''}</td></tr>`).join('');
+    };
+
+    window.renderBranchReport = () => {
+        const b = document.getElementById('b-search-select').value, mo = document.getElementById('b-month-val').value;
+        if(!b || !mo) return alert("Select Branch & Month!");
+        const emps = allEmps.filter(e => e.branch === b);
+        let h = `<table class="report-table"><thead><tr><th>Name</th><th>Target</th><th>Done</th><th>Collected</th><th>%</th></tr></thead><tbody>`, tot = 0;
+        emps.forEach(e => {
+            const t = (allAssigns[e.id] || []).length, v = allVisits.filter(v => v.eid === e.id && v.date.startsWith(mo) && (v.stat==='Paid'||v.stat==='Seized'));
+            const d = [...new Set(v.map(x => x.hp))].length, a = v.reduce((s, x) => s + parseInt(x.amt || 0), 0);
+            tot += a; h += `<tr><td>${e.name}</td><td>${t}</td><td>${d}</td><td>₹${a}</td><td><b>${t>0?((d/t)*100).toFixed(1):0}%</b></td></tr>`;
+        });
+        document.getElementById('b-results').innerHTML = h + `</tbody></table><div class="summary-box">Total: ₹${tot}</div>`;
+    };
+
+    window.checkVisitStatus = () => {
+        const id = document.getElementById('stat-em-sel').value, mo = document.getElementById('stat-month-val').value;
+        if(!id || !mo) return alert("Select Employee & Month!");
+        const assignedHPs = allAssigns[id] || [], visits = allVisits.filter(v => v.eid === id && v.date.startsWith(mo));
+        let html = "", count = 0;
+        assignedHPs.forEach(hp => {
+            const v = visits.find(x => x.hp == hp);
+            if(v) { count++; html += `<tr><td>${hp}</td><td>${v.cname}</td><td style="color:green;font-weight:bold;">VISITED</td><td>${v.date}</td></tr>`; }
+            else { html += `<tr><td>${hp}</td><td>---</td><td style="color:red;font-weight:bold;">PENDING</td><td>---</td></tr>`; }
+        });
+        document.getElementById('stat-table-body').innerHTML = html;
+        document.getElementById('stat-summary-box').innerText = `Total Assigned: ${assignedHPs.length} | Visited: ${count} | Pending: ${assignedHPs.length - count}`;
+        document.getElementById('stat-summary-box').classList.remove('hidden');
+    };
+
+    window.renderMonthlyReport = () => {
+        const id = document.getElementById('m-emp-sel').value, mo = document.getElementById('m-mo-input').value;
+        const data = allVisits.filter(v => v.eid === id && v.date.startsWith(mo));
+        const t = (allAssigns[id] || []).length, d = [...new Set(data.filter(v=>v.stat==='Paid'||v.stat==='Seized').map(x=>x.hp))].length;
+        document.getElementById('m-summary').innerHTML = `Target: ${t} | Done: ${d} | Pending: ${t-d}`; document.getElementById('m-summary').classList.remove('hidden');
+        document.getElementById('m-table-body').innerHTML = data.map(v => `<tr><td>${v.date}<br>${v.time}</td><td>${v.cname}<br><b>${v.hp}</b></td><td>${v.stat}</td><td>${v.type}<br>₹${v.amt}</td><td>${v.ir && v.ir !== 'N/A' ? `<img src="${v.ir}" class="img-preview" onclick="window.open(this.src)">` : 'No Receipt'}</td></tr>`).join('');
+    };
+
+    window.renderEmployeeSelfReport = () => {
+        const d = document.getElementById('e-rep-date').value;
+        const my = allVisits.filter(v => v.eid === current.id && (!d || v.date === d));
+        document.getElementById('e-report-body').innerHTML = my.map(v => `<tr><td>${v.date}<br>${v.time}</td><td>${v.cname}<br><b>${v.hp}</b></td><td>${v.stat}<br>₹${v.amt}</td><td>Vill: ${v.vill}<br>Loc: ${v.loc}</td><td><img src="${v.i1}" class="img-preview"><img src="${v.i2}" class="img-preview">${v.ir && v.ir !== 'N/A' ? `<br><img src="${v.ir}" class="img-preview">` : ''}</td></tr>`).join('');
+    };
+
+    window.addBranch = () => { const n = document.getElementById('new-branch-name').value.trim(); if(n && confirm(`Add ${n}?`)) set(ref(db, 'branches/'+n), {name:n}).then(()=>document.getElementById('new-branch-name').value=""); };
+    function updateDropdowns() { const opt = '<option value="">Select Branch</option>' + allBranches.map(b => `<option value="${b.name}">${b.name}</option>`).join(''); ['r-branch-select', 'b-search-select', 'm-branch-select', 'as-branch-sel', 'a-rep-branch-sel', 'stat-br-sel'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = opt; }); document.getElementById('branch-display-list').innerHTML = allBranches.map(b => `<li>${b.name}</li>`).join(''); }
+    window.renderEmpList = () => { document.getElementById('a-reg-list').innerHTML = allEmps.map(e => `<tr><td>${e.id}</td><td>${e.name}</td><td>${e.branch}</td><td><button onclick="editEmp('${e.id}')">Edit</button></td></tr>`).join(''); };
+    window.loadAssignEmps = () => { const b = document.getElementById('as-branch-sel').value; document.getElementById('as-emp-sel').innerHTML = allEmps.filter(e => e.branch === b).map(e => `<option value="${e.id}">${e.name}</option>`).join(''); };
+    window.loadSearchEmps = () => { const b = document.getElementById('a-rep-branch-sel').value; document.getElementById('a-rep-emp-sel').innerHTML = '<option value="">All Employees</option>' + allEmps.filter(e => e.branch === b).map(e => `<option value="${e.id}">${e.name}</option>`).join(''); };
+    window.loadMonthlyEmps = () => { const b = document.getElementById('m-branch-select').value; document.getElementById('m-emp-sel').innerHTML = '<option value="">Select Employee</option>' + allEmps.filter(e => e.branch === b).map(e => `<option value="${e.id}">${e.name}</option>`).join(''); };
+    window.loadStatEmps = () => { const b = document.getElementById('stat-br-sel').value; document.getElementById('stat-em-sel').innerHTML = '<option value="">Select Employee</option>' + allEmps.filter(e => e.branch === b).map(e => `<option value="${e.id}">${e.name}</option>`).join(''); };
+    
+    function renderAttendance() { document.getElementById('att-body').innerHTML = allEmps.map(e => { const d = [...new Set(allVisits.filter(v => v.eid === e.id).map(v => v.date))].length; return `<tr><td>${e.name}</td><td>${e.id}</td><td>${e.branch}</td><td>${d} Days</td></tr>`; }).join(''); }
+    function renderTarget() { const myA = allAssigns[current.id] || [], myP = allVisits.filter(v => v.eid === current.id && (v.stat === 'Paid' || v.stat === 'Seized')); const d = [...new Set(myP.map(v => v.hp))].length; document.getElementById('e-target-summary').innerText = `Target: ${myA.length} | Done: ${d} | Pending: ${myA.length - d}`; document.getElementById('e-target-body').innerHTML = myP.map(v => `<tr><td>${v.hp}</td><td>${v.cname}</td><td>${v.stat}</td><td>${v.date}</td></tr>`).join(''); };
+    function startGPS() { if(navigator.geolocation) { navigator.geolocation.getCurrentPosition(p => { gps = p.coords.latitude.toFixed(5)+","+p.coords.longitude.toFixed(5); document.getElementById('gps-status').innerText="✅ GPS Fixed"; document.getElementById('gps-status').style.color="green"; }); } }
+    
+    window.showSub = (id) => { document.querySelectorAll('.sub-section').forEach(s => s.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); if(id === 'a-att') renderAttendance(); if(id === 'e-target') renderTarget(); };
+    window.toggleV = () => { const s = document.getElementById('v-stat').value; document.getElementById('v-paid-logic').classList.toggle('hidden', s !== 'Paid'); document.getElementById('v-unpaid-logic').classList.toggle('hidden', s === 'Paid' || s === 'Seized'); document.getElementById('v-seized-logic').classList.toggle('hidden', s !== 'Seized'); };
+    window.toggleL = () => { const t = document.getElementById('v-pay-type').value; document.getElementById('v-pcr-box').classList.toggle('hidden', t !== 'PCR'); document.getElementById('v-lock-box').classList.toggle('hidden', t !== 'Lock Amount'); };
+    window.togglePCRDate = () => { document.getElementById('v-pcr-date').classList.toggle('hidden', document.getElementById('v-pcr-later').value !== 'Yes'); };
+    window.toggleReceipt = () => { document.getElementById('v-receipt-box').classList.toggle('hidden', document.getElementById('v-ppfc').value !== 'Yes'); };
+
+    document.getElementById('login-btn').onclick = window.handleLogin;
+    document.getElementById('as-btn').onclick = () => { const id = document.getElementById('as-emp-sel').value, hps = document.getElementById('as-hp-list').value.split(',').map(x=>x.trim()).filter(x=>x); set(ref(db, 'assignments/'+id), hps).then(() => alert("Assigned!")); };
+</script>
+</body>
+</html>
